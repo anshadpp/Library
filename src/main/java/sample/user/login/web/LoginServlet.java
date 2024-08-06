@@ -5,11 +5,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
-
 import jakarta.servlet.http.HttpSession;
-
+import java.io.IOException;
 import sample.user.login.bean.LoginBean;
 import sample.user.login.database.LoginDao;
 
@@ -23,22 +20,22 @@ public class LoginServlet extends HttpServlet {
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String username = request.getParameter("username");
+        String identifier = request.getParameter("username");
         String password = request.getParameter("password");
+
         LoginBean loginBean = new LoginBean();
-        loginBean.setUsername(username);
+        loginBean.setIdentifier(identifier);
         loginBean.setPassword(password);
 
         try {
             if (loginDao.validate(loginBean)) {
-            	
-            	HttpSession session = request.getSession();
-            	session.setAttribute("username", username); // Replace `username` with actual username
-
+                int id = loginDao.getId(identifier);
+                HttpSession session = request.getSession();
+                session.setAttribute("id", id);
                 response.sendRedirect("/sample/dashboard");
             } else {
                 HttpSession session = request.getSession();
-                session.setAttribute("user", username);
+                session.setAttribute("errorMessage", "Invalid login credentials.");
                 response.sendRedirect("login.jsp");
             }
         } catch (ClassNotFoundException e) {

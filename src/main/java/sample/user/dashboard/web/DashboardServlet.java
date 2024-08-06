@@ -1,8 +1,8 @@
 package sample.user.dashboard.web;
 
-
-import sample.user.dashboard.database.*;
-import sample.user.dashboard.model.*;
+import sample.user.dashboard.database.DashboardDao;
+import sample.user.dashboard.database.UploadDao;
+import sample.user.dashboard.model.ViewUUpload;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
@@ -25,23 +25,26 @@ public class DashboardServlet extends HttpServlet {
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    	HttpSession session = request.getSession(false); // Do not create a new session if it doesn't exist
+        HttpSession session = request.getSession(false); // Do not create a new session if it doesn't exist
 
-        if (session != null && session.getAttribute("username") != null) {
-        	
-        String username = (String) session.getAttribute("username");
-    	List<Books> books = dashboardDao.selectAllBooks();
-        for (Books book : books) {
-            System.out.println("Book in servlet: " + book.getBook_name()); // Logging
-        }
-        
+        String sort = request.getParameter("sort");
+        String category = request.getParameter("category");
+        List<String> categories = dashboardDao.getAllCategories();
+        request.setAttribute("categories", categories);
+        List<ViewUUpload> books = dashboardDao.getBooks(sort, category);
         request.setAttribute("books", books);
-        request.setAttribute("username", username);
+
+        if (session != null && session.getAttribute("id") != null) {
+            int id = (int) session.getAttribute("id");
+            request.setAttribute("id", id);
+
+            // Retrieve books from user's shelf
+            List<ViewUUpload> userBooks = dashboardDao.getUserBoughtBooks(id);
+            request.setAttribute("userBooks", userBooks);
+        }
+
         RequestDispatcher dispatcher = request.getRequestDispatcher("dashboard.jsp");
         dispatcher.forward(request, response);
-    }else {
-    	response.sendRedirect(request.getContextPath() + "/login.jsp");
-    }
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
